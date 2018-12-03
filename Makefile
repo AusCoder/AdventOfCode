@@ -1,4 +1,4 @@
-TARGET = day2
+TARGET = day3
 LIBS =
 CC = clang++
 CXXFLAGS = -g -Wall -std=c++14
