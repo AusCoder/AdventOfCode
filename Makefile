@@ -1,7 +1,7 @@
-TARGET = day9
+TARGET = day12
 LIBS =
 CC = clang++
-CXXFLAGS = -g -Wall -std=c++14
+CXXFLAGS = -g -Wall -std=c++14 -O3
 HEADERS =
 
 default: $(TARGET)
