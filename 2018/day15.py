@@ -51,9 +51,6 @@ class Position:
             shortest path distance to this position.
         """
         reachable = dict()
-        enqued = (
-            set()
-        )  # substitute for not having a visited field on each node (ie Position)
         positions = deque()
         positions.append((self, 0))
 
@@ -61,10 +58,9 @@ class Position:
             position, dist = positions.popleft()
             reachable[position] = dist
             for adj_position in position.empty_adj_positions(game):
-                if adj_position in enqued:
-                    continue
-                enqued.add(adj_position)
-                if adj_position not in reachable:
+                if adj_position not in reachable and adj_position not in set(
+                    p for p, _ in positions
+                ):
                     positions.append((adj_position, dist + 1))
         return reachable
 
@@ -76,10 +72,11 @@ class VisitablePosition(Position):
 
 
 class Creature:
+    attack_power = 3
+
     def __init__(self, x: int, y: int) -> None:
         self.position = Position(x, y)
         self.hp = 200
-        self.attack_power = 3
 
     def __repr__(self):
         return f"{self.__class__.__name__}(position={self.position}, hp={self.hp})"
@@ -215,9 +212,6 @@ class Game:
 
         self.completed_rounds += 1
 
-        # print(self)
-        # print()
-
     def run(self):
         while True:
             try:
@@ -225,7 +219,7 @@ class Game:
             except NoEnemiesExistError:
                 break
         outcome = sum(c.hp for c in self.creatures) * self.completed_rounds
-        print(outcome)
+        return outcome
 
     def draw_with_positions(self, positions=None, char: str = "@") -> bool:
         positions = [] if positions is None else positions
@@ -267,14 +261,83 @@ def read_input(path: Path):
 
 
 def part1():
+    game = read_input(Path("input/test.txt"))
+    outcome = game.run()
+    print(f"Game outcome: {outcome}")
+
+
+def bsearch_iter(arr, start, stop, target):
+    if stop == start + 1:
+        return arr[start]
+    mid = (start + stop) // 2
+    mid_val = arr[mid]
+    if target < mid_val:
+        return bsearch_iter(arr, start, mid, target)
+    elif target > mid_val:
+        return bsearch_iter(arr, mid, stop, target)
+    return mid_val
+
+
+# TODO: I should put together a little compendium of useful algorithms
+# and their implementations.
+def bsearch(arr, target):
+    start = 0
+    stop = len(arr)
+    while True:
+        if stop == start + 1:
+            return arr[start]
+        mid = (start + stop) // 2
+        mid_val = arr[mid]
+        if target < mid_val:
+            stop = mid
+        elif target > mid_val:
+            start = mid
+        else:
+            return mid_val
+
+
+def play_with_elf_attack_power(attack_power):
+    Elf.attack_power = attack_power
+
     game = read_input(Path("input/day15.txt"))
-    # print(game)
-    # print()
-    game.run()
-    # game.run_round()
-    # game.run_round()
-    # game.run_round()
+    initial_num_elves = len(game.elves)
+    outcome = game.run()
+    num_dead_elves = initial_num_elves - len(game.elves)
+    return outcome, num_dead_elves
+
+
+def part2():
+    max_attack_power = 50
+
+    while True:
+        _, num_dead_elves = play_with_elf_attack_power(max_attack_power)
+        if num_dead_elves == 0:
+            break
+        max_attack_power += 10
+
+    attack_powers = list(range(4, max_attack_power))
+    start = 0
+    stop = len(attack_powers)
+    while start < stop:
+        mid = (start + stop) // 2
+        attack_power = attack_powers[mid]
+        outcome, num_dead_elves = play_with_elf_attack_power(attack_power)
+        print(attack_power, num_dead_elves, outcome, start, mid, stop)
+        if num_dead_elves > 0:
+            if start == mid:
+                # A little mucking around to land us in the bigger side
+                start = mid + 1
+                stop = start + 1
+            else:
+                start = mid
+        else:
+            stop = mid
+
+    print(
+        f"Attack power: {attack_power}. Outcome: {outcome}. Num dead elves: {num_dead_elves}"
+    )
 
 
 if __name__ == "__main__":
-    part1()
+    # part1()
+    part2()
