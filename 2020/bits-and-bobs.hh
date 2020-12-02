@@ -10,6 +10,7 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <regex>
 #include <sstream>
 #include <unordered_map>
 #include <vector>
@@ -35,6 +36,19 @@ std::vector<T> pickColumn(const std::vector<std::vector<T>> &matrix,
   std::transform(matrix.cbegin(), matrix.cend(), std::back_inserter(col),
                  [=](auto row) { return row.at(colIdx); });
   return col;
+}
+
+std::vector<std::string> readLines(std::istream &iStream) {
+  std::vector<std::string> lines;
+  std::string line;
+  for (;;) {
+    std::getline(iStream, line);
+    if (line.size() == 0) {
+      break;
+    }
+    lines.push_back(line);
+  }
+  return lines;
 }
 
 /*
