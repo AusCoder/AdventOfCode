@@ -29,9 +29,11 @@ void printMatrix(const std::vector<std::vector<T>> &matrix) {
   }
 }
 
+template <typename T> void print(const T &thing) { std::cout << thing << "\n"; }
+
 template <typename T>
-std::vector<T> pickColumn(const std::vector<std::vector<T>> &matrix,
-                          int colIdx) {
+std::vector<T> getColumn(int colIdx,
+                         const std::vector<std::vector<T>> &matrix) {
   std::vector<T> col;
   std::transform(matrix.cbegin(), matrix.cend(), std::back_inserter(col),
                  [=](auto row) { return row.at(colIdx); });
@@ -86,6 +88,11 @@ std::vector<std::vector<std::string>> readMatrixStr(std::istream &iStream) {
 std::vector<std::vector<int>> readMatrixInt(std::istream &iStream) {
   auto parseFn = [](std::string x) { return std::stoi(x); };
   return readMatrix<int, decltype(parseFn)>(iStream, parseFn);
+}
+
+std::vector<std::vector<double>> readMatrixDouble(std::istream &iStream) {
+  auto parseFn = [](std::string x) { return std::stod(x); };
+  return readMatrix<double, decltype(parseFn)>(iStream, parseFn);
 }
 
 #endif
