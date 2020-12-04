@@ -60,10 +60,7 @@ void printPredicateCount(const std::vector<std::string> &lines, F predicate) {
 }
 
 int main() {
-  std::string inputFileName = "input/day2.txt";
-  std::ifstream fInput{inputFileName};
-  assert(fInput.is_open());
-  auto passwordsWithPolicy = readLines(fInput);
+  auto passwordsWithPolicy = readLinesFromFile("input/day2.txt");
   printPredicateCount<decltype(part1IsValid)>(passwordsWithPolicy,
                                               part1IsValid);
   printPredicateCount<decltype(part1IsValid)>(passwordsWithPolicy,

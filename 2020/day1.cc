@@ -25,9 +25,8 @@ void part2(const std::vector<int> &nums) {
 }
 
 int main() {
-  std::ifstream fInput{"input/day1.txt"};
-  assert(fInput.is_open());
-  auto nums = getColumn(0, readMatrixInt(fInput));
+  auto lines = readLinesFromFile("input/day1.txt");
+  auto nums = getColumn(0, parseMatrixInt(lines));
   part1(nums);
   part2(nums);
 }

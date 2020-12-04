@@ -6,7 +6,7 @@ int countSlope(const std::vector<std::string> &forest, int shiftX, int shiftY) {
   int x = 0;
   int y = 0;
   int count = 0;
-  while (y < height) {
+  while ((y < height) && (forest.at(y).size() > 0)) {
     if (forest.at(y).at(x) == '#') {
       count++;
     }
@@ -32,9 +32,7 @@ void part2(const std::vector<std::string> &forest) {
 }
 
 int main() {
-  std::ifstream fInput{"input/day3.txt"};
-  assert(fInput.is_open());
-  auto forest = readLines(fInput);
+  auto forest = readLinesFromFile("input/day3.txt");
   part1(forest);
   part2(forest);
 }
