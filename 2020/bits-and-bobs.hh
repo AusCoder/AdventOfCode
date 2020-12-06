@@ -30,7 +30,12 @@ void printMatrix(const std::vector<std::vector<T>> &matrix) {
   }
 }
 
-// TODO: printMap
+template <typename T> void printMap(const T &map) {
+  for (const auto &item : map) {
+    std::cout << item.first << " -> " << item.second << "  ";
+  }
+  std::cout << "\n";
+}
 
 template <typename T> void print(const T &thing) { std::cout << thing << "\n"; }
 
