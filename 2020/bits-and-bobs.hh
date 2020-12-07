@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <deque>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -16,8 +17,8 @@
 #include <unordered_map>
 #include <vector>
 
-template <typename T> void printVector(const std::vector<T> &vec) {
-  for (auto &x : vec) {
+template <typename T> void printContainer(const T &con) {
+  for (const auto &x : con) {
     std::cout << x << " ";
   }
   std::cout << "\n";
@@ -26,7 +27,7 @@ template <typename T> void printVector(const std::vector<T> &vec) {
 template <typename T>
 void printMatrix(const std::vector<std::vector<T>> &matrix) {
   for (auto &vec : matrix) {
-    printVector(vec);
+    printContainer(vec);
   }
 }
 
