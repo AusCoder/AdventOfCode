@@ -26,7 +26,7 @@ template <typename T> void printContainer(const T &con) {
 
 template <typename T>
 void printMatrix(const std::vector<std::vector<T>> &matrix) {
-  for (auto &vec : matrix) {
+  for (const auto &vec : matrix) {
     printContainer(vec);
   }
 }
@@ -125,6 +125,12 @@ std::vector<std::vector<int>>
 parseMatrixInt(const std::vector<std::string> &lines) {
   auto parseFn = [](std::string x) { return std::stoi(x); };
   return parseMatrix<int, decltype(parseFn)>(lines, parseFn);
+}
+
+std::vector<std::vector<long>>
+parseMatrixLong(const std::vector<std::string> &lines) {
+  auto parseFn = [](std::string x) { return std::stol(x); };
+  return parseMatrix<long, decltype(parseFn)>(lines, parseFn);
 }
 
 std::vector<std::vector<double>>
