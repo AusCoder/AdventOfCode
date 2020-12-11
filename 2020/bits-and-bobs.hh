@@ -121,6 +121,17 @@ parseMatrixStr(const std::vector<std::string> &lines) {
   return parseMatrix<std::string, decltype(parseFn)>(lines, parseFn);
 }
 
+std::vector<std::vector<char>>
+parseMatrixChar(const std::vector<std::string> &lines) {
+  std::vector<std::vector<char>> matrix(lines.size());
+  std::transform(lines.cbegin(), lines.cend(), matrix.begin(),
+                 [](const auto &s) {
+                   std::vector<char> v{s.begin(), s.end()};
+                   return v;
+                 });
+  return matrix;
+}
+
 std::vector<std::vector<int>>
 parseMatrixInt(const std::vector<std::string> &lines) {
   auto parseFn = [](std::string x) { return std::stoi(x); };
@@ -142,6 +153,28 @@ parseMatrixDouble(const std::vector<std::string> &lines) {
 bool isNumber(const std::string &s) {
   return std::all_of(s.cbegin(), s.cend(),
                      [](auto c) { return std::isdigit(c); });
+}
+
+/*
+  Returns valid adjacent positions to (x, y) in 2d grid
+  of size (width, height)
+*/
+std::vector<std::pair<int, int>> adjacentPositions2D(int x, int y, int width,
+                                                     int height) {
+  std::vector<std::pair<int, int>> adj;
+  for (int dx = -1; dx < 2; dx++) {
+    for (int dy = -1; dy < 2; dy++) {
+      adj.push_back(std::make_pair(x + dx, y + dy));
+    }
+  }
+  auto isValidPoint = [&](const auto &pts) {
+    return (!((pts.first == x) && (pts.second == y))) && (pts.first >= 0) &&
+           (pts.first < width) && (pts.second >= 0) && (pts.second < height);
+  };
+  std::vector<std::pair<int, int>> validAdj;
+  std::copy_if(adj.cbegin(), adj.cend(), std::back_inserter(validAdj),
+               isValidPoint);
+  return validAdj;
 }
 
 #endif
