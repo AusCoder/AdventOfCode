@@ -13,50 +13,177 @@ bool isSame(const vector<vector<char>> &previousLayout,
   return ret;
 }
 
-void part1(const vector<vector<char>> &l) {
+class adj_strategy {
+public:
+  virtual bool isAllAdjUnoccupied(const vector<vector<char>> &layout, int x,
+                                  int y) const = 0;
+
+  virtual bool isAllAdjOccupied(const vector<vector<char>> &layout, int x,
+                                int y) const = 0;
+};
+
+class part1_adj_strategy : public adj_strategy {
+public:
+  bool isAllAdjUnoccupied(const vector<vector<char>> &layout, int x,
+                          int y) const {
+    int height = layout.size();
+    int width = layout.at(0).size();
+    auto adjPos = adjacentPositions2D(x, y, width, height);
+    bool allAdjUnoccupied =
+        all_of(adjPos.cbegin(), adjPos.cend(), [&](const auto &pos) {
+          return layout.at(pos.second).at(pos.first) != '#';
+        });
+    return allAdjUnoccupied;
+  }
+
+  bool isAllAdjOccupied(const vector<vector<char>> &layout, int x,
+                        int y) const {
+    int height = layout.size();
+    int width = layout.at(0).size();
+    auto adjPos = adjacentPositions2D(x, y, width, height);
+    int occupiedCount = accumulate(
+        adjPos.cbegin(), adjPos.cend(), 0, [&](auto acc, const auto &pos) {
+          return layout.at(pos.second).at(pos.first) == '#' ? acc + 1 : acc;
+        });
+    return occupiedCount >= 4;
+  }
+};
+
+class part2_adj_strategy : public adj_strategy {
+public:
+  bool isAllAdjUnoccupied(const vector<vector<char>> &layout, int x,
+                          int y) const {
+    auto ns = neighbors(layout, x, y);
+    bool allAdjUnoccupied =
+        all_of(ns.cbegin(), ns.cend(), [&](const auto &n) { return n != '#'; });
+    return allAdjUnoccupied;
+  }
+
+  bool isAllAdjOccupied(const vector<vector<char>> &layout, int x,
+                        int y) const {
+    auto ns = neighbors(layout, x, y);
+    int occupiedCount =
+        accumulate(ns.cbegin(), ns.cend(), 0, [&](auto acc, const auto &n) {
+          return n == '#' ? acc + 1 : acc;
+        });
+    return occupiedCount >= 5;
+  }
+
+private:
+  vector<char> neighbors(const vector<vector<char>> &layout, int startx,
+                         int starty) const {
+    int height = layout.size();
+    int width = layout.at(0).size();
+    vector<char> ns;
+    char c = '.';
+    // x direction
+    for (int x = startx + 1; x < width; x++) {
+      c = layout.at(starty).at(x);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+
+    c = '.';
+    for (int x = startx - 1; x >= 0; x--) {
+      c = layout.at(starty).at(x);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+    // y direction
+    c = '.';
+    for (int y = starty + 1; y < height; y++) {
+      c = layout.at(y).at(startx);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+
+    c = '.';
+    for (int y = starty - 1; y >= 0; y--) {
+      c = layout.at(y).at(startx);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+    // diagonals
+    c = '.';
+    for (int x = startx + 1, y = starty + 1; x < width && y < height;
+         x++, y++) {
+      c = layout.at(y).at(x);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+
+    c = '.';
+    for (int x = startx + 1, y = starty - 1; x < width && y >= 0; x++, y--) {
+      c = layout.at(y).at(x);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+
+    c = '.';
+    for (int x = startx - 1, y = starty + 1; x >= 0 && y < height; x--, y++) {
+      c = layout.at(y).at(x);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+
+    c = '.';
+    for (int x = startx - 1, y = starty - 1; x >= 0 && y >= 0; x--, y--) {
+      c = layout.at(y).at(x);
+      if (c != '.') {
+        break;
+      }
+    }
+    ns.push_back(c);
+    return ns;
+  }
+};
+
+void run(const adj_strategy &strat, const vector<vector<char>> &l) {
   vector<vector<char>> layout{l.begin(), l.end()};
   int height = layout.size();
   int width = layout.at(0).size();
-  // printMatrix(layout);
-  // print("");
+
   for (;;) {
     vector<vector<char>> nextLayout{l.begin(), l.end()};
     // evolve layout
-    for (int j = 0; j < height; j++) {
-      for (int i = 0; i < width; i++) {
-        auto current = layout.at(j).at(i);
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        auto current = layout.at(y).at(x);
         char next = '_';
         if (current == 'L') {
-          auto adjPos = adjacentPositions2D(i, j, width, height);
-          bool allAdjUnoccupied =
-              all_of(adjPos.cbegin(), adjPos.cend(), [&](const auto &pos) {
-                return layout.at(pos.second).at(pos.first) != '#';
-              });
+          bool allAdjUnoccupied = strat.isAllAdjUnoccupied(layout, x, y);
           if (allAdjUnoccupied) {
             next = '#';
           }
         } else if (current == '#') {
-          auto adjPos = adjacentPositions2D(i, j, width, height);
-          int occupiedCount =
-              accumulate(adjPos.cbegin(), adjPos.cend(), 0,
-                         [&](auto acc, const auto &pos) {
-                           return layout.at(pos.second).at(pos.first) == '#'
-                                      ? acc + 1
-                                      : acc;
-                         });
-          if (occupiedCount >= 4) {
+          bool allAdjOccupied = strat.isAllAdjOccupied(layout, x, y);
+          if (allAdjOccupied) {
             next = 'L';
           }
         }
         if (next == '_') {
           next = current;
         }
-        nextLayout.at(j).at(i) = next;
+        nextLayout.at(y).at(x) = next;
       }
     }
 
+    // check for stable layout
     if (isSame(layout, nextLayout)) {
-      // printMatrix(layout);
       break;
     }
     layout = nextLayout;
@@ -74,6 +201,8 @@ void part1(const vector<vector<char>> &l) {
 int main() {
   auto lines = readLinesFromFile("input/day11.txt");
   auto matrix = parseMatrixChar(lines);
-  part1(matrix);
-  // adjacentPositions(0, 1, 3, 3);
+  part1_adj_strategy part1_strat;
+  part2_adj_strategy part2_strat;
+  run(part1_strat, matrix);
+  run(part2_strat, matrix);
 }
