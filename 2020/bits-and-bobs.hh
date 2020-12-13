@@ -40,6 +40,10 @@ template <typename T> void printMap(const T &map) {
 
 template <typename T> void print(const T &thing) { std::cout << thing << "\n"; }
 
+template <typename T, typename S> void printPair(const std::pair<T, S> &p) {
+  std::cout << "(" << p.first << ", " << p.second << ")\n";
+}
+
 template <typename T>
 std::vector<T> getColumn(int colIdx,
                          const std::vector<std::vector<T>> &matrix) {
@@ -47,6 +51,19 @@ std::vector<T> getColumn(int colIdx,
   std::transform(matrix.cbegin(), matrix.cend(), std::back_inserter(col),
                  [=](auto row) { return row.at(colIdx); });
   return col;
+}
+
+/*
+  Split a string using a regex string.
+  This works well for commas.
+*/
+std::vector<std::string> splitString(const std::string &s,
+                                     const std::string &regexStr) {
+  std::vector<std::string> parts;
+  std::regex sepRe(regexStr);
+  std::copy(std::sregex_token_iterator(s.cbegin(), s.cend(), sepRe, -1),
+            std::sregex_token_iterator(), std::back_inserter(parts));
+  return parts;
 }
 
 /*
@@ -153,6 +170,32 @@ parseMatrixDouble(const std::vector<std::string> &lines) {
 bool isNumber(const std::string &s) {
   return std::all_of(s.cbegin(), s.cend(),
                      [](auto c) { return std::isdigit(c); });
+}
+
+long calculateLCM(long x, long y) {
+  long s = 1;
+  long t = 1;
+  for (;;) {
+    long sum = x * s - y * t;
+    if (sum == 0) {
+      return x * s;
+    } else if (sum < 0) {
+      s++;
+    } else {
+      t++;
+    }
+  }
+}
+
+long calculateLCM(const std::vector<int> &nums) {
+  if (nums.size() <= 1) {
+    throw std::invalid_argument("lcm requires at least 2 arguments");
+  }
+  long lcm = nums.at(0);
+  for (size_t idx = 1; idx < nums.size(); idx++) {
+    lcm = calculateLCM(lcm, nums.at(idx));
+  }
+  return lcm;
 }
 
 /*
