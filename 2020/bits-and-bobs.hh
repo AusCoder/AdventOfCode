@@ -220,4 +220,10 @@ std::vector<std::pair<int, int>> adjacentPositions2D(int x, int y, int width,
   return validAdj;
 }
 
+/*
+  A couple notes on bit shifts:
+  x | (1 << i)    sets bit i to 1
+  x & ~(1 << i)   sets bit i to 0
+*/
+
 #endif

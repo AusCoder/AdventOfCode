@@ -37,6 +37,11 @@ void part1(const vector<string> &lines) {
 
 /*
   Part 2
+
+  Upon reading some posts on reddit, the chinese remainder theorem
+  is relevant here. It gives a way to calculate a number based on
+  the remainder modulo a bunch of coprime numbers. All the numbers
+  in this puzzle are prime, hence coprime so it can be applied here.
 */
 
 /*
