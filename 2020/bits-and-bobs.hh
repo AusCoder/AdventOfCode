@@ -66,6 +66,10 @@ std::vector<std::string> splitString(const std::string &s,
   return parts;
 }
 
+bool startsWith(const std::string &s, const std::string &prefix) {
+  return s.substr(0, prefix.size()) == prefix;
+}
+
 /*
   Read lines from a file, possibly without reading
   final empty line.
