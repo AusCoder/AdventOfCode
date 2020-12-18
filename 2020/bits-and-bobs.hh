@@ -124,6 +124,11 @@ std::vector<T> parseVector(const std::string &line, F parseFn) {
   return elems;
 }
 
+std::vector<std::string> parseVectorStr(const std::string &line) {
+  auto parseFn = [](std::string x) { return x; };
+  return parseVector<std::string, decltype(parseFn)>(line, parseFn);
+}
+
 /*
   Parse matix from vector of strings with space separators
 */
