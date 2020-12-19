@@ -125,8 +125,13 @@ std::vector<T> parseVector(const std::string &line, F parseFn) {
 }
 
 std::vector<std::string> parseVectorStr(const std::string &line) {
-  auto parseFn = [](std::string x) { return x; };
+  auto parseFn = [](const std::string &x) { return x; };
   return parseVector<std::string, decltype(parseFn)>(line, parseFn);
+}
+
+std::vector<int> parseVectorInt(const std::string &line) {
+  auto parseFn = [](const std::string &s) { return std::stoi(s); };
+  return parseVector<int, decltype(parseFn)>(line, parseFn);
 }
 
 /*
