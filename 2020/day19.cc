@@ -1,47 +1,71 @@
 #include "bits-and-bobs.hh"
+#include <unordered_set>
 
 using namespace std;
-
-// enum class RuleType { CharRule, SumRule, OrRule };
 
 class Rule {
 public:
   Rule(int i) : ruleNum{i} {};
   virtual ~Rule(){};
   virtual void print() const = 0;
-  virtual bool check(string::const_iterator &it) const = 0;
-
+  virtual void replace(shared_ptr<Rule> rule) = 0;
+  bool check(string::const_iterator &it, string::const_iterator end) const {
+    return doCheck(it, end) && checkLast(it, end);
+  }
+  virtual vector<string> build() const = 0;
   int ruleNum;
+
+private:
+  virtual bool doCheck(string::const_iterator &it,
+                       string::const_iterator end) const = 0;
+
+  bool checkLast(string::const_iterator &it, string::const_iterator end) const {
+    if (ruleNum == 0) {
+      return it == end;
+    }
+    return true;
+  }
 };
 
 class CharRule : public Rule {
 public:
   CharRule(int i, char c_) : Rule{i}, c{c_} {}
-  char c;
 
   void print() const override { cout << ruleNum << ": " << c << "\n"; }
-  bool check(string::const_iterator &it) const { return *it++ == c; }
+
+  void replace(shared_ptr<Rule> rule) {}
+
+  vector<string> build() const override {
+    string s{c};
+    return {s};
+  }
+
+private:
+  char c;
+  bool doCheck(string::const_iterator &it,
+               string::const_iterator end) const override {
+    return *it++ == c;
+  }
 };
 
-class AndRule : public Rule {
-public:
-  AndRule(int i, vector<shared_ptr<Rule>> &&subRules)
-      : Rule{i}, rules{std::move(subRules)} {};
-
-  vector<shared_ptr<Rule>> rules;
-
-  void print() const override {
-    cout << ruleNum << ": ";
-    for (const auto &p : rules) {
-      cout << p->ruleNum << " ";
+vector<string> buildProduct(const vector<shared_ptr<Rule>> &rules) {
+  vector<string> possibilities;
+  for (const auto &rule : rules) {
+    auto rulePossibilities = rule->build();
+    if (possibilities.size() == 0) {
+      possibilities = rulePossibilities;
+    } else {
+      vector<string> newPossibilities;
+      for (auto &p : possibilities) {
+        for (const auto &rp : rulePossibilities) {
+          newPossibilities.push_back(p + rp);
+        }
+      }
+      possibilities = std::move(newPossibilities);
     }
-    cout << "\n";
   }
-  bool check(string::const_iterator &it) const {
-    return all_of(rules.cbegin(), rules.cend(),
-                  [&it](const auto &rule) { return rule->check(it); });
-  }
-};
+  return possibilities;
+}
 
 class OrRule : public Rule {
 public:
@@ -61,12 +85,37 @@ public:
     cout << "\n";
   }
 
-  bool check(string::const_iterator &it) const {
+  void replace(shared_ptr<Rule> rule) {
+    for (auto &rules : ruleGroups) {
+      for (auto it = rules.begin(); it != rules.end(); it++) {
+        if ((*it)->ruleNum == rule->ruleNum) {
+          *it = rule;
+        }
+      }
+    }
+  }
+
+  vector<string> build() const override {
+    vector<string> possibilities;
+    for (const auto &rules : ruleGroups) {
+      auto rulePossibilities = buildProduct(rules);
+      for (const auto &p : rulePossibilities) {
+        possibilities.push_back(p);
+      }
+    }
+    return possibilities;
+  }
+
+private:
+  bool doCheck(string::const_iterator &it,
+               string::const_iterator end) const override {
+
     string::const_iterator startIt = it;
     for (const auto &rules : ruleGroups) {
       bool isMatch =
-          all_of(rules.cbegin(), rules.cend(),
-                 [&it](const auto &rule) { return rule->check(it); });
+          all_of(rules.cbegin(), rules.cend(), [&it, &end](const auto &rule) {
+            return rule->check(it, end);
+          });
       if (isMatch) {
         return true;
       }
@@ -76,8 +125,114 @@ public:
   }
 };
 
+class AndRule : public Rule {
+public:
+  AndRule(int i, bool hasModifiedRules_, vector<shared_ptr<Rule>> &&subRules)
+      : Rule{i}, hasModifiedRules{hasModifiedRules_}, rules{std::move(
+                                                          subRules)} {};
+
+  void print() const override {
+    cout << ruleNum << ": ";
+    for (const auto &p : rules) {
+      cout << p->ruleNum << " ";
+    }
+    cout << "\n";
+  }
+
+  void replace(shared_ptr<Rule> rule) {
+    for (auto it = rules.begin(); it != rules.end(); it++) {
+      if ((*it)->ruleNum == rule->ruleNum) {
+        *it = rule;
+      }
+    }
+  }
+  bool hasModifiedRules;
+  vector<shared_ptr<Rule>> rules;
+
+  vector<string> build() const override { return buildProduct(rules); }
+
+private:
+  bool doCheck(string::const_iterator &it,
+               string::const_iterator end) const override {
+
+    if (hasModifiedRules && (ruleNum == 0)) {
+      // This is rough
+      // Manually checking the rules:
+      // 0: 8 11
+      // 8: 42 | 42 8
+      // 11: 42 31 | 42 11 31
+      //
+      // General idea is: eat some 42s then try eating 31s
+
+      auto rule8 = rules.at(0);
+      assert(rule8->ruleNum == 8);
+      auto rule11 = rules.at(1);
+      assert(rule11->ruleNum == 11);
+      OrRule *rule8Cast = dynamic_cast<OrRule *>(rule8.get());
+      auto rule42 = rule8Cast->ruleGroups.at(0).at(0);
+      assert(rule42->ruleNum == 42);
+      OrRule *rule11Cast = dynamic_cast<OrRule *>(rule11.get());
+      auto rule31 = rule11Cast->ruleGroups.at(0).at(1);
+      assert(rule31->ruleNum == 31);
+
+      string::const_iterator startIt = it;
+      for (;;) {
+        // parse one 42
+        if (!rule42->check(it, end)) {
+          it = startIt;
+          return false;
+        }
+        string::const_iterator parsed42It = it;
+        // Try parsing some 42's then same number of 31's
+        string::const_iterator checkpointIt = it;
+        int parseCount = 0;
+        while (rule42->check(it, end)) {
+          checkpointIt = it;
+          parseCount++;
+        }
+        it = checkpointIt;
+        if (parseCount == 0) {
+          it = startIt;
+          return false;
+        }
+        bool isMatch = true;
+        for (int i = 0; i < parseCount; i++) {
+          if (!rule31->check(it, end)) {
+            it = parsed42It;
+            isMatch = false;
+            break;
+          }
+        }
+        if (isMatch) {
+          return true;
+        }
+      }
+      assert(false);
+      return false;
+    }
+
+    return all_of(rules.cbegin(), rules.cend(), [&it, &end](const auto &rule) {
+      return rule->check(it, end);
+    });
+  }
+};
+
 unordered_map<int, shared_ptr<Rule>>
-parseRuleDefinitions(const unordered_map<int, string> &ruleDefinitions) {
+parseRuleDefinitions(bool hasModifiedRules, const vector<string> &lines) {
+  unordered_map<int, string> ruleDefinitions;
+  for (const auto &line : lines) {
+    if (line.empty()) {
+      break;
+    }
+    std::regex ruleRe("(\\d+):\\s(.*)");
+    std::smatch ruleMatch;
+    std::regex_match(line, ruleMatch, ruleRe);
+    assert(!ruleMatch.empty());
+    int ruleNum = std::stoi(ruleMatch.str(1));
+    string ruleDefinition = ruleMatch.str(2);
+    ruleDefinitions.insert({ruleNum, ruleDefinition});
+  }
+
   unordered_map<int, shared_ptr<Rule>> rules;
 
   while (rules.size() < ruleDefinitions.size()) {
@@ -111,7 +266,8 @@ parseRuleDefinitions(const unordered_map<int, string> &ruleDefinitions) {
                       back_inserter(subRules),
                       [&rules](auto n) { return rules.at(n); });
             rules.insert(
-                {ruleNum, make_shared<AndRule>(ruleNum, std::move(subRules))});
+                {ruleNum, make_shared<AndRule>(ruleNum, hasModifiedRules,
+                                               std::move(subRules))});
           }
           continue;
         }
@@ -149,44 +305,52 @@ parseRuleDefinitions(const unordered_map<int, string> &ruleDefinitions) {
       }
     }
   }
+
+  if (hasModifiedRules) {
+    vector<vector<shared_ptr<Rule>>> ruleGroups8{{rules.at(42)},
+                                                 {rules.at(42)}};
+    auto new8 = make_shared<OrRule>(8, std::move(ruleGroups8));
+    new8->ruleGroups.at(1).push_back(new8);
+
+    vector<vector<shared_ptr<Rule>>> ruleGroups11{{rules.at(42), rules.at(31)},
+                                                  {rules.at(42), rules.at(31)}};
+    auto new11 = make_shared<OrRule>(11, std::move(ruleGroups11));
+    new11->ruleGroups.at(1).insert(new11->ruleGroups.at(1).begin() + 1, new11);
+
+    rules.at(8) = new8;
+    rules.at(11) = new11;
+    for (auto &p : rules) {
+      if (p.first != 8) {
+        p.second->replace(new8);
+      }
+      if (p.first != 11) {
+        p.second->replace(new11);
+      }
+    }
+  }
   return rules;
 }
 
-void part1(const vector<string> &lines) {
-  unordered_map<int, string> ruleDefinitions;
-  for (const auto &line : lines) {
-    if (line.empty()) {
-      break;
-    }
-    std::regex ruleRe("(\\d+):\\s(.*)");
-    std::smatch ruleMatch;
-    std::regex_match(line, ruleMatch, ruleRe);
-    assert(!ruleMatch.empty());
-    int ruleNum = std::stoi(ruleMatch.str(1));
-    string ruleDefinition = ruleMatch.str(2);
-    ruleDefinitions.insert({ruleNum, ruleDefinition});
-  }
-
-  auto rules = parseRuleDefinitions(ruleDefinitions);
-
+void run(const vector<string> &lines,
+         const unordered_map<int, shared_ptr<Rule>> &rules) {
   auto it = lines.cbegin();
   while (!it++->empty()) {
   }
+  int validCount = 0;
   for (; it != lines.cend(); it++) {
-    print(*it);
     string::const_iterator strIt = it->cbegin();
-    print(rules.at(0)->check(strIt));
+    string::const_iterator endIt = it->cend();
+    if (rules.at(0)->check(strIt, endIt)) {
+      validCount++;
+    }
   }
+  print(validCount);
 }
 
 int main() {
   auto lines = readLinesFromFile("input/day19.txt");
-  part1(lines);
-  // string s = "ab";
-  // string::const_iterator strIt = s.cbegin();
-  // // CharRule r{0, 'a'};
-  // auto ra = make_shared<CharRule>(1, 'a');
-  // auto rb = make_shared<CharRule>(2, 'b');
-  // OrRule r{0, {{ra, rb}, {rb, ra}}};
-  // print(r.check(strIt));
+  auto part1Rules = parseRuleDefinitions(false, lines);
+  auto part2Rules = parseRuleDefinitions(true, lines);
+  run(lines, part1Rules);
+  run(lines, part2Rules);
 }
