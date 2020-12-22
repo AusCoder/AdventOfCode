@@ -70,6 +70,14 @@ bool startsWith(const std::string &s, const std::string &prefix) {
   return s.substr(0, prefix.size()) == prefix;
 }
 
+std::string trimWhitespace(const std::string &s) {
+  std::regex contentRe("\\s*(.*)\\s*");
+  std::smatch contentMatch;
+  std::regex_match(s, contentMatch, contentRe);
+  assert(!contentMatch.empty());
+  return contentMatch.str(1);
+}
+
 /*
   Read lines from a file, possibly without reading
   final empty line.
