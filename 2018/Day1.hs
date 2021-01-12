@@ -14,7 +14,7 @@ import qualified Data.Text.IO as TIO
 import Text.Parsec as P
 import qualified Text.Parsec.Char as PC
 
-valueParser :: Parser Int
+valueParser :: SimpleParser Int
 valueParser =
   let numberFromDigits = foldl' (\acc n -> acc * 10 + n) 0
       numP = numberFromDigits . fmap digitToInt <$> P.many PC.digit
@@ -24,7 +24,7 @@ valueParser =
         _ -> P.unexpected ("char: " ++ [c])
 
 parseNumbers :: T.Text -> Either String [Int]
-parseNumbers = either (Left . show) Right . mapM (P.parse valueParser "") . T.lines
+parseNumbers = either (Left . show) Right . mapM (runSimpleParser valueParser) . T.lines
 
 part1 :: [Int] -> Int
 part1 = sum

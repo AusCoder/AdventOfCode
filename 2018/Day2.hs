@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections #-}
 
 module Day2 (day2) where
 
+import Common (pairwiseCombs)
 import qualified Data.Map.Strict as M
 import Data.Maybe (maybe)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Safe
+import Safe (headMay)
 
 letterCounts :: T.Text -> M.Map Char Int
 letterCounts =
@@ -36,12 +36,6 @@ letterDiffCount t =
   let go acc ((x, y) : rest) = go (if x /= y then acc + 1 else acc) rest
       go acc _ = acc
    in go 0 . T.zip t
-
-pairwiseCombs :: [a] -> [(a, a)]
-pairwiseCombs [] = []
-pairwiseCombs [x] = []
-pairwiseCombs [x, y] = [(x, y)]
-pairwiseCombs (x : xs) = fmap (x,) xs ++ pairwiseCombs xs
 
 part2 :: T.Text -> Either String T.Text
 part2 =

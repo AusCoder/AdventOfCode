@@ -3,31 +3,70 @@
 module Day3 (day3) where
 
 import Common
+import qualified Data.Map.Strict as M
+-- import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import Debug.Trace
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Char as PC
 
 data Box = Box
-  { id :: Int,
-    x :: Int,
-    y :: Int,
+  { id :: Maybe Int,
+    xMin :: Int,
+    yMin :: Int,
     width :: Int,
     height :: Int
   }
   deriving (Show)
 
-boxParser :: Parser Box
+xMax b = xMin b + width b
+
+yMax b = yMin b + height b
+
+points :: Box -> [(Int, Int)]
+points (Box _ x y w h) = do
+  s <- [x .. x + w - 1]
+  t <- [y .. y + h - 1]
+  return (s, t)
+
+intersection :: Box -> Box -> Maybe Box
+intersection b1 b2 =
+  let x = max (xMin b1) (xMin b2)
+      y = max (yMin b1) (yMin b2)
+      dx = abs $ x - min (xMax b1) (xMax b2)
+      dy = abs $ y - min (yMax b1) (yMax b2)
+   in if (dx > 0) && (dy > 0)
+        then Just $ Box Nothing x y dx dy
+        else Nothing
+
+-- intersectionArea box = maybe 0 (\b -> width b * height b) . intersection box
+
+boxParser :: SimpleParser Box
 boxParser = do
   id <- PC.char '#' >> numberParser
   x <- PC.spaces >> PC.char '@' >> PC.spaces >> numberParser
   y <- PC.char ',' >> numberParser
   w <- PC.char ':' >> PC.spaces >> numberParser
   h <- PC.char 'x' >> numberParser
-  return $ Box id x y w h
+  return $ Box (Just id) x y w h
+
+countIntersection :: [Box] -> Int
+countIntersection =
+  let ptCount m [] = m
+      ptCount m (box : rest) =
+        let addOrInsert pt m' = M.insert pt (maybe 1 (1 +) $ M.lookup pt m') m'
+            newM = foldr addOrInsert m $ points box
+         in ptCount newM rest
+   in M.size . M.filter (> 1) . ptCount M.empty
+
+part1 :: T.Text -> Either AOCError Int
+part1 = fmap countIntersection . mapM (runSimpleParser boxParser) . T.lines
 
 day3 :: IO ()
 day3 = do
   content <- TIO.readFile "input/day3.txt"
-  print . mapM (simpleRunParser boxParser) . T.lines $ content
-  putStrLn "abc"
+  print $ part1 content
+
+-- let boxes = mapM (runSimpleParser boxParser) . T.lines $ content
+-- print $ fmap (fmap (uncurry intersectionArea) . pairwiseCombs) boxes
