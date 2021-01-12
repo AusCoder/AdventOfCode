@@ -2,19 +2,17 @@
 
 module Day1 (day1) where
 
+import Common
 import Control.Monad
 import Data.Char (digitToInt)
 import Data.Either (Either (..), either)
 import Data.Foldable (foldl')
-import Data.Functor.Identity (Identity)
 import Data.Maybe (maybe)
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Text.Parsec as P
 import qualified Text.Parsec.Char as PC
-
-type Parser a = P.ParsecT T.Text () Identity a
 
 valueParser :: Parser Int
 valueParser =

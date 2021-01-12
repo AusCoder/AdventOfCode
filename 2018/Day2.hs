@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 
 module Day2 (day2) where
 
@@ -6,6 +7,7 @@ import qualified Data.Map.Strict as M
 import Data.Maybe (maybe)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import Safe
 
 letterCounts :: T.Text -> M.Map Char Int
 letterCounts =
@@ -36,21 +38,20 @@ letterDiffCount t =
    in go 0 . T.zip t
 
 pairwiseCombs :: [a] -> [(a, a)]
-pairwiseCombs xs = (,) <$> xs <*> xs
+pairwiseCombs [] = []
+pairwiseCombs [x] = []
+pairwiseCombs [x, y] = [(x, y)]
+pairwiseCombs (x : xs) = fmap (x,) xs ++ pairwiseCombs xs
 
--- pairwiseCombs [] = []
--- pairwiseCombs [x] = []
--- pairwiseCombs [x,y] = [(x,y)]
--- pairwiseCombs (x:xs) = pairwiseCombs xs
-
-part2 :: T.Text -> T.Text
-part2 = fmap (uncurry letterDiffCount) . pairwiseCombs . T.lines
-
--- let lines = T.lines
+part2 :: T.Text -> Either String T.Text
+part2 =
+  let commonLetters :: T.Text -> T.Text -> T.Text
+      commonLetters s = T.pack . fmap fst . filter (uncurry (==)) . T.zip s
+      getCommonLetters = maybe (Left "Couldn't find pair with diff of 1") (Right . uncurry commonLetters)
+   in getCommonLetters . headMay . filter ((==) 1 . uncurry letterDiffCount) . pairwiseCombs . T.lines
 
 day2 :: IO ()
 day2 = do
   content <- TIO.readFile "input/day2.txt"
-  -- print $ part1 content
-  -- print $ letterDiffCount "fghij" "fguij"
-  print $ pairwiseCombs [1, 2, 3]
+  print $ part1 content
+  either print TIO.putStrLn $ part2 content
