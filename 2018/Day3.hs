@@ -8,11 +8,12 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Debug.Trace
+import Safe
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Char as PC
 
 data Box = Box
-  { id :: Maybe Int,
+  { boxId :: Maybe Int,
     xMin :: Int,
     yMin :: Int,
     width :: Int,
@@ -40,8 +41,6 @@ intersection b1 b2 =
         then Just $ Box Nothing x y dx dy
         else Nothing
 
--- intersectionArea box = maybe 0 (\b -> width b * height b) . intersection box
-
 boxParser :: SimpleParser Box
 boxParser = do
   id <- PC.char '#' >> numberParser
@@ -51,22 +50,35 @@ boxParser = do
   h <- PC.char 'x' >> numberParser
   return $ Box (Just id) x y w h
 
-countIntersection :: [Box] -> Int
-countIntersection =
+buildPointCount :: [Box] -> M.Map (Int, Int) Int
+buildPointCount =
   let ptCount m [] = m
       ptCount m (box : rest) =
         let addOrInsert pt m' = M.insert pt (maybe 1 (1 +) $ M.lookup pt m') m'
             newM = foldr addOrInsert m $ points box
          in ptCount newM rest
-   in M.size . M.filter (> 1) . ptCount M.empty
+   in ptCount M.empty
+
+countIntersection :: [Box] -> Int
+countIntersection = M.size . M.filter (> 1) . buildPointCount
 
 part1 :: T.Text -> Either AOCError Int
 part1 = fmap countIntersection . mapM (runSimpleParser boxParser) . T.lines
+
+findUncoveredBox :: [Box] -> Either AOCError Int
+findUncoveredBox boxes =
+  let ptCount = buildPointCount boxes
+      isNotCovered box = all (\p -> M.lookup p ptCount == Just 1) (points box)
+      uncoveredBoxM = headMay . filter isNotCovered $ boxes
+      uncoveredBoxE = maybe (Left $ AOCGenericError "No uncovered boxes") Right uncoveredBoxM
+      getId = maybe (Left $ AOCGenericError "Box has no id") Right . boxId
+   in uncoveredBoxE >>= getId
+
+part2 :: T.Text -> Either AOCError Int
+part2 t = mapM (runSimpleParser boxParser) (T.lines t) >>= findUncoveredBox
 
 day3 :: IO ()
 day3 = do
   content <- TIO.readFile "input/day3.txt"
   print $ part1 content
-
--- let boxes = mapM (runSimpleParser boxParser) . T.lines $ content
--- print $ fmap (fmap (uncurry intersectionArea) . pairwiseCombs) boxes
+  print $ part2 content
