@@ -4,7 +4,6 @@ module Day3 (day3) where
 
 import Common
 import qualified Data.Map.Strict as M
--- import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Debug.Trace
