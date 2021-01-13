@@ -5,6 +5,7 @@ module Day4 (day4) where
 import Common
 import Data.List (maximumBy)
 import qualified Data.Map.Strict as M
+import Data.Maybe (fromMaybe)
 import Data.Ord (comparing)
 import Data.Sort (sortOn)
 import qualified Data.Text as T
@@ -48,17 +49,22 @@ eventParser = do
 
 data SleepTime = SleepTime Int Int deriving (Show)
 
-mostSleptMin :: [SleepTime] -> Int
-mostSleptMin times =
+-- Using unsafe maximum's here and other places
+mostSleptCountWithMinute :: [SleepTime] -> (Int, Int)
+mostSleptCountWithMinute times =
   let count c [] _ = c
       count c (SleepTime x y : rest) minute =
         count (if minute >= x && minute < y then c + 1 else c) rest minute
-   in snd . maximum . fmap (\m -> (count 0 times m, m)) $ [0 .. 59]
+   in maximum . fmap (\m -> (count 0 times m, m)) $ [0 .. 59]
+
+mostSleptMinute :: [SleepTime] -> Int
+mostSleptMinute = snd . mostSleptCountWithMinute
 
 -- This is a bit nuts
+-- Nicer to write 2 smaller list parse fns
 sleepTimesById :: [Event] -> Either AOCError (M.Map Int [SleepTime])
 sleepTimesById =
-  let err m es = Left . AOCGenericError $ "Failed to build sleep times. Map: " ++ (show m) ++ " Events: " ++ (show es)
+  let err m es = Left . AOCGenericError $ "Failed to build sleep times. Map: " ++ show m ++ " Events: " ++ show es
       go (Just i) Nothing m [] = Right m
       go (Just i) Nothing m (e : rest) =
         case eventType e of
@@ -68,7 +74,7 @@ sleepTimesById =
       go (Just i) (Just f) m (e : rest) =
         case eventType e of
           WakeUp ->
-            let prev = maybe [] id $ M.lookup i m
+            let prev = fromMaybe [] $ M.lookup i m
                 newM = M.insert i (SleepTime f (eventMin e) : prev) m
              in go (Just i) Nothing newM rest
           _ -> err m (e : rest)
@@ -83,15 +89,28 @@ part1Candidate :: M.Map Int [SleepTime] -> Int
 part1Candidate =
   let dur (SleepTime x y) = y - x
       duration = sum . fmap dur
-      idTimesMostSleptMin i sts = i * mostSleptMin sts
+      idTimesMostSleptMin i sts = i * mostSleptMinute sts
    in uncurry idTimesMostSleptMin . maximumBy (comparing $ duration . snd) . M.toList
 
-part1 :: T.Text -> Either AOCError Int
-part1 t =
+runPart :: (M.Map Int [SleepTime] -> Int) -> T.Text -> Either AOCError Int
+runPart candidateFn t =
   let parseFn = fmap (sortOn datetime) . mapM (runSimpleParser eventParser) . T.lines
-   in parseFn t >>= fmap part1Candidate . sleepTimesById
+   in parseFn t >>= fmap candidateFn . sleepTimesById
+
+part1 :: T.Text -> Either AOCError Int
+part1 = runPart part1Candidate
+
+part2Candidate :: M.Map Int [SleepTime] -> Int
+part2Candidate =
+  let countMinuteId i times = let (c, m) = mostSleptCountWithMinute times in (c, m, i)
+      minuteTimesId (_, m, i) = m * i
+   in minuteTimesId . maximum . fmap (uncurry countMinuteId) . M.toList
+
+part2 :: T.Text -> Either AOCError Int
+part2 = runPart part2Candidate
 
 day4 :: IO ()
 day4 = do
   content <- TIO.readFile "input/day4.txt"
   print . part1 $ content
+  print . part2 $ content
