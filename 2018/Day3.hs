@@ -11,6 +11,9 @@ import Safe
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Char as PC
 
+-- I can do a much better sweepig algorithm than what is
+-- used here.
+
 data Box = Box
   { boxId :: Maybe Int,
     xMin :: Int,
