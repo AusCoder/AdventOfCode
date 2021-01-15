@@ -1,12 +1,11 @@
-module Day6 where
+module Day6 (day6) where
 
 import Common
-import Safe
-import Data.Maybe (maybeToList, fromMaybe)
+import Data.Maybe (fromMaybe, maybeToList)
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Debug.Trace
+import Safe
 import Text.Parsec as P
 import qualified Text.Parsec.Char as PC
 
@@ -28,10 +27,10 @@ part1 t = mapM (runSimpleParser pointParser) (T.lines t) >>= largestFiniteArea
 largestFiniteArea :: [Point] -> Either AOCError Int
 largestFiniteArea pts =
   let pairs ys [] = []
-      pairs ys (x:xs) = (x, reverse ys ++ xs) : pairs (x:ys) xs
+      pairs ys (x : xs) = (x, reverse ys ++ xs) : pairs (x : ys) xs
 
       finiteAreas = pairs [] pts >>= maybeToList . uncurry calculateFiniteArea
-  in maybe (Left $ AOCGenericError "No finite areas") Right $ maximumMay finiteAreas
+   in maybe (Left $ AOCGenericError "No finite areas") Right $ maximumMay finiteAreas
 
 calculateFiniteArea :: Point -> [Point] -> Maybe Int
 calculateFiniteArea center otherCenters =
@@ -45,7 +44,7 @@ calculateFiniteArea center otherCenters =
       go seenPoints area [] = Just area
       -- Search around the neighbors of p
       go seenPoints area (p : rest)
-        | not (isValidPt p) = Nothing  -- infinite area
+        | not (isValidPt p) = Nothing -- infinite area
         | Set.member p seenPoints = go seenPoints area rest
         | otherwise =
           let isClosestToCenter = all (\q -> manhattanDistance p center < manhattanDistance p q) otherCenters
@@ -53,7 +52,7 @@ calculateFiniteArea center otherCenters =
               newArea = if isClosestToCenter then area + 1 else area
               ns = if isClosestToCenter then neighbors p else []
               newRest = foldr (:) rest . filter (not . flip elem seenPoints) $ ns
-          in go newSeenPoints newArea newRest
+           in go newSeenPoints newArea newRest
    in go Set.empty 0 [center]
 
 neighbors :: Point -> [Point]
@@ -75,11 +74,10 @@ closeRegionSize maxDist pts =
       maxY = maximum . fmap getY $ pts
 
       allPts = do
-        x <- [minX..maxX]
-        Point x <$> [minY..maxY]
+        x <- [minX .. maxX]
+        Point x <$> [minY .. maxY]
 
       isClose p = sum (manhattanDistance p <$> pts) < maxDist
-
    in length . filter isClose $ allPts
 
 day6 :: IO ()

@@ -3,6 +3,8 @@
 module Common
   ( SimpleParser,
     AOCError (..),
+    mayToAOCError,
+    mayToAOCGenericError,
     numberParser,
     dayParser,
     hourMinuteParser,
@@ -24,6 +26,12 @@ import qualified Text.Parsec.Char as PC
 type SimpleParser a = P.ParsecT T.Text () Identity a
 
 data AOCError = AOCParseError P.ParseError | AOCGenericError String deriving (Show)
+
+mayToAOCError :: AOCError -> Maybe a -> Either AOCError a
+mayToAOCError e = maybe (Left e) Right
+
+mayToAOCGenericError :: String -> Maybe a -> Either AOCError a
+mayToAOCGenericError s = mayToAOCError (AOCGenericError s)
 
 numberParser :: SimpleParser Int
 numberParser =
