@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Main where
 
 import Day1 (day1)
@@ -12,4 +10,4 @@ import Day7 (day7)
 
 main :: IO ()
 main = do
-  day7
+  day3
