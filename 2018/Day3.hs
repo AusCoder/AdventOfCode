@@ -44,16 +44,6 @@ points (Box _ x y w h) = do
   t <- [y .. y + h - 1]
   return (s, t)
 
-intersection :: Box -> Box -> Maybe Box
-intersection b1 b2 =
-  let x = max (xMin b1) (xMin b2)
-      y = max (yMin b1) (yMin b2)
-      dx = abs $ x - min (xMax b1) (xMax b2)
-      dy = abs $ y - min (yMax b1) (yMax b2)
-   in if (dx > 0) && (dy > 0)
-        then Just $ Box Nothing x y dx dy
-        else Nothing
-
 buildPointCount :: [Box] -> M.Map (Int, Int) Int
 buildPointCount =
   let ptCount m [] = m
@@ -62,12 +52,6 @@ buildPointCount =
             newM = foldr addOrInsert m $ points box
          in ptCount newM rest
    in ptCount M.empty
-
-countIntersection :: [Box] -> Int
-countIntersection = M.size . M.filter (> 1) . buildPointCount
-
-_part1 :: T.Text -> Either AOCError Int
-_part1 = fmap countIntersection . mapM (runSimpleParser boxParser) . T.lines
 
 -- algo idea:
 --    fold over the sorted x points
@@ -84,40 +68,23 @@ intersectionArea boxes =
       foldFn (a, b) acc = acc + (b - a) * intersectionLength (unsafeLookup a)
    in foldr foldFn 0 $ zip xPoints (tail xPoints)
 
--- intersectionLenghtAtX :: M.Map Int [(Int, Bool)] -> Int -> Int
--- intersectionLenghtAtX yPointsByX x =
---   let yPoints = fromMaybe undefined $ M.lookup x yPointsByX
-
---       go inCount startPos acc [] = acc
---       go inCount startPos acc ((x, isEnd) : rest)
---         | inCount <= 1 = go (inCount + 1) x acc rest
---         | not isEnd = go (inCount + 1) x acc rest
---         | otherwise =
---           let newInCount = inCount - 1
---            in if newInCount == 1
---                 then
---                   let newAcc = (acc + x - startPos)
---                    in go newInCount undefined (trace (show newAcc) newAcc) rest
---                 else go newInCount startPos acc rest
---    in go 0 undefined 0 yPoints
-
 intersectionLength :: [(Int, Bool)] -> Int
 intersectionLength =
-  let go inCount _ acc [] = acc
-      go inCount Nothing acc ((x, False) : rest) = go (inCount + 1) (Just x) acc rest
-      go inCount Nothing acc ((x, True) : rest) = go (inCount - 1) Nothing acc rest
-      go inCount startM@(Just start) acc ((x, isEnd) : rest)
-        | not isEnd = go (inCount + 1) startM acc rest
-        | otherwise =
-          let newInCount = inCount - 1
-           in if newInCount == 1
-                then go newInCount Nothing (acc + x - start) rest
-                else go newInCount startM acc rest
+  let go inCount startM acc [] = acc
+      go inCount startM acc ((x, isEnd) : rest) =
+        let inCount' = if isEnd then inCount - 1 else inCount + 1
+         in case (inCount, isEnd) of
+              (1, False) -> go inCount' (Just x) acc rest
+              (2, True) -> go inCount' Nothing (acc + x - fromMaybe undefined startM) rest
+              _ -> go inCount' startM acc rest
    in go 0 Nothing 0
 
 part1 :: T.Text -> Either AOCError Int
 part1 = fmap intersectionArea . mapM (runSimpleParser boxParser) . T.lines
 
+-- looking at all points is probably not needed here
+-- we can sweep left to right, then sweep boxes top
+-- to bottom, keep track of whether 2 boxes intersect each other
 findUncoveredBox :: [Box] -> Either AOCError Int
 findUncoveredBox boxes =
   let ptCount = buildPointCount boxes
@@ -133,16 +100,5 @@ part2 t = mapM (runSimpleParser boxParser) (T.lines t) >>= findUncoveredBox
 day3 :: IO ()
 day3 = do
   content <- TIO.readFile "input/day3.txt"
-  let xs = sort $ [(0, 3), (1, 5)] >>= \(x, y) -> [(x, False), (y, True)]
-  print $ xs
-  print $ intersectionLength xs
-
--- print $ part1 content
-
--- print $ _part1 content
-
--- print $ part2 content
-
--- 0 3
---  1  5
---    4  6
+  print $ part1 content
+  print $ part2 content
