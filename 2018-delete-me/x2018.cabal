@@ -1,0 +1,29 @@
+cabal-version:       >=1.10
+
+name:                x2018
+version:             0.1.0.0
+author:              AusCoder
+maintainer:          sebmuellermath@gmail.com
+build-type:          Simple
+
+executable day1
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  other-modules:
+    Common,
+    Day1,
+    Day2,
+    Day3,
+    Day4,
+    Day5,
+    Day6,
+    Day7
+  build-depends:
+    base >=4.13 && <4.14,
+    safe >= 0.3.19 && < 1,
+    time >= 1.11 && < 2,
+    sort >= 1.0 && < 2,
+    containers >= 0.6 && < 1,
+    text >=1.2 && <1.3,
+    parsec >= 3.1 && < 4,
+    mtl >= 2.2 && < 3
