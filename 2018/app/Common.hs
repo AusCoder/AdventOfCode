@@ -1,7 +1,8 @@
 {-# LANGUAGE TupleSections #-}
 
-module Common where
+module Common (module Common, fromMaybe) where
 
+import Data.Maybe (fromMaybe)
 import Control.Monad ((>=>))
 import Text.Parsec
 
