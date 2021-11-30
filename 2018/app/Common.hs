@@ -2,8 +2,8 @@
 
 module Common (module Common, fromMaybe) where
 
-import Data.Maybe (fromMaybe)
 import Control.Monad ((>=>))
+import Data.Maybe (fromMaybe)
 import Text.Parsec
 
 data AOCError
@@ -19,27 +19,26 @@ type StringParser a = Parsec String () a
 runStringParser :: StringParser a -> String -> Either AOCError a
 runStringParser p = either (Left . AOCParseError) Right . runParser p () "string source"
 
+parserManyLines :: StringParser a -> StringParser [a]
+parserManyLines p = many (p >>= \x -> x <$ endOfLine)
+
 parserInt :: StringParser Int
 parserInt = read <$> many1 digit
 
 parserSignedInt :: StringParser Int
-parserSignedInt = do
-  s <- oneOf "+-"
-  let s' = if s == '+' then 1 else -1
-  (* s') <$> parserInt
+parserSignedInt =
+  (try (char '-') <|> return '+') >>= \s ->
+    let sign = if s == '-' then -1 else 1
+     in (*) sign <$> parserInt
 
 printResult :: (Show a) => Either AOCError a -> IO ()
 printResult (Left err) = putStrLn $ "Got an error: " ++ show err
 printResult (Right x) = print x
 
-runDay :: (Show a) => String -> (String -> Either AOCError a) -> IO ()
-runDay inputFilename fn = do
+runDay :: (Show a) => String -> StringParser b -> (b -> Either AOCError a) -> IO ()
+runDay inputFilename p fn = do
   ls <- readFile inputFilename
-  printResult $ fn ls
-
-runDayWithParser :: (Show a) => String -> StringParser b -> (b -> Either AOCError a) -> IO ()
-runDayWithParser inputFilename parser fn =
-  runDay inputFilename (runStringParser parser >=> fn)
+  printResult . (runStringParser p >=> fn) $ ls
 
 pairs :: [a] -> [(a, a)]
 pairs [] = []
@@ -56,3 +55,6 @@ pairs (x : xs) =
 headMay :: [a] -> Maybe a
 headMay [] = Nothing
 headMay (x : _) = Just x
+
+headErr :: [a] -> Either AOCError a
+headErr = maybeToErr "head failed" . headMay

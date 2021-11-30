@@ -1,11 +1,12 @@
 {-# LANGUAGE TupleSections #-}
+
 module Day3 where
 
 import Common
-import Debug.Trace
 import Data.List
-import Data.Ord(comparing)
 import qualified Data.Map.Strict as Map
+import Data.Ord (comparing)
+import Debug.Trace
 import Text.Parsec
 
 data Claim = Claim
@@ -46,17 +47,19 @@ intersectionArea claims =
   let xCoords = sort $ claims >>= \c -> [claimXMin c, claimXMax c]
       containsX x c = x >= claimXMin c && x < claimXMax c
       claimsAtX x = filter (containsX x) claims
-      foldFn acc (x, x') = acc + (
-        let i = intersectionLength (claimsAtX x)
-            v = (x' - x) * i
-         in v)
-    in foldl foldFn 0 $ zip xCoords (tail xCoords)
+      foldFn acc (x, x') =
+        acc
+          + ( let i = intersectionLength (claimsAtX x)
+                  v = (x' - x) * i
+               in v
+            )
+   in foldl foldFn 0 $ zip xCoords (tail xCoords)
 
 intersectionLength :: [Claim] -> Int
 intersectionLength claims =
   let pts = sort $ claims >>= \c -> [(claimYMin c, False), (claimYMax c, True)]
       go inCount startInt acc [] = acc
-      go inCount startInt acc ((y, isEnd): rest) =
+      go inCount startInt acc ((y, isEnd) : rest) =
         let newInCount = if isEnd then inCount - 1 else inCount + 1
          in case (inCount, isEnd) of
               (1, False) -> go newInCount (Just y) acc rest
@@ -64,7 +67,7 @@ intersectionLength claims =
               _ -> go newInCount startInt acc rest
    in go 0 Nothing 0 pts
 
-day3a = runDayWithParser "input/day3.txt" parserClaims (Right . intersectionArea)
+day3a = runDay "input/day3.txt" parserClaims (Right . intersectionArea)
 
 claimPoints claim = [claimXMin claim .. claimXMax claim - 1] >>= \x -> map (x,) [claimYMin claim .. claimYMax claim - 1]
 
@@ -72,9 +75,9 @@ nonOverlappingClaim :: [Claim] -> Either AOCError Int
 nonOverlappingClaim claims =
   let incrPoint p m = Map.insert p ((+) 1 . fromMaybe 0 . Map.lookup p $ m) m
       insertClaim claim m =
-          foldr incrPoint m $ claimPoints claim
+        foldr incrPoint m $ claimPoints claim
       cornerCounts = foldr insertClaim Map.empty claims
       hasNoIntersection claim = all (\p -> fromMaybe 0 (Map.lookup p cornerCounts) == 1) (claimPoints claim)
-  in fmap claimId . maybeToErr "no head" . headMay . filter hasNoIntersection $ claims
+   in fmap claimId . maybeToErr "no head" . headMay . filter hasNoIntersection $ claims
 
-day3b = runDayWithParser "input/day3.txt" parserClaims nonOverlappingClaim
+day3b = runDay "input/day3.txt" parserClaims nonOverlappingClaim

@@ -24,7 +24,7 @@ part1 strs =
       count3 = length $ filter (elem 3) counts
    in count2 * count3
 
-day2a = runDayWithParser "input/day2.txt" parserStrs (Right . part1)
+day2a = runDay "input/day2.txt" parserStrs (Right . part1)
 
 letterDistance :: String -> String -> Either AOCError Int
 letterDistance s1 s2 =
@@ -44,6 +44,6 @@ part2 strs =
             filter differBy1 counts
         return . map fst $ common s1 s2
 
--- day2b = runDayWithParser "input/day2.txt" parserStrs part2
+-- day2b = runDay "input/day2.txt" parserStrs part2
 
-day2b = runDayWithParser "input/day2.txt" parserStrs (Right . length . pairs)
+day2b = runDay "input/day2.txt" parserStrs (Right . length . pairs)

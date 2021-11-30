@@ -4,8 +4,14 @@ import Common
 import qualified Data.Set as Set
 import Text.Parsec
 
+parserIntWithSign :: StringParser Int
+parserIntWithSign = do
+  s <- oneOf "+-"
+  let s' = if s == '+' then 1 else -1
+  (* s') <$> parserInt
+
 parserInts :: StringParser [Int]
-parserInts = many (parserSignedInt >>= \x -> x <$ endOfLine)
+parserInts = many (parserIntWithSign >>= \x -> x <$ endOfLine)
 
 partialSums :: [Int] -> [Int]
 partialSums nums =
@@ -23,6 +29,6 @@ firstRepeat =
 findRepeat =
   maybeToErr "no repeat found" . firstRepeat . partialSums . cycle
 
-day1a = runDayWithParser "input/day1.txt" parserInts (Right . sum)
+day1a = runDay "input/day1.txt" parserInts (Right . sum)
 
-day1b = runDayWithParser "input/day1.txt" parserInts findRepeat
+day1b = runDay "input/day1.txt" parserInts findRepeat
