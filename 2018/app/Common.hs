@@ -2,7 +2,6 @@
 
 module Common (module Common, fromMaybe) where
 
-import Control.Monad ((>=>))
 import Data.Maybe (fromMaybe)
 import Text.Parsec
 
@@ -35,10 +34,14 @@ printResult :: (Show a) => Either AOCError a -> IO ()
 printResult (Left err) = putStrLn $ "Got an error: " ++ show err
 printResult (Right x) = print x
 
+runDayIO :: (Show a) => String -> StringParser b -> (b -> IO (Either AOCError a)) -> IO ()
+runDayIO inputFilename p fn = do
+  lns <- readFile inputFilename
+  result <- either (return . Left) fn $ runStringParser p lns
+  printResult result
+
 runDay :: (Show a) => String -> StringParser b -> (b -> Either AOCError a) -> IO ()
-runDay inputFilename p fn = do
-  ls <- readFile inputFilename
-  printResult . (runStringParser p >=> fn) $ ls
+runDay inputFilename p fn = runDayIO inputFilename p (return . fn)
 
 pairs :: [a] -> [(a, a)]
 pairs [] = []

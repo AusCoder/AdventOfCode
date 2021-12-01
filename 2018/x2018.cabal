@@ -18,6 +18,7 @@ executable x2018
                     , Day8
                     , Day9
                     , Day10
+                    , Day11
     build-depends:    base ^>=4.14.3.0
                     , parsec
                     , mtl
