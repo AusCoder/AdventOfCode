@@ -15,6 +15,7 @@ executable x2021
                     , Day6
                     , Day7
                     , Day8
+                    , Day9
     build-depends:    base ^>=4.14.3.0
                     , parsec
                     , mtl
@@ -22,5 +23,7 @@ executable x2021
                     , containers
                     , unordered-containers
                     , time
+                    , sort
+                    , heap
     hs-source-dirs:   app
     default-language: Haskell2010
