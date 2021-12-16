@@ -61,3 +61,10 @@ headMay (x : _) = Just x
 
 headErr :: [a] -> Either AOCError a
 headErr = maybeToErr "head failed" . headMay
+
+binToInt :: String -> Int
+binToInt s =
+  let go [] _ = 0
+      go ('0' : xs) n = go xs (n - 1)
+      go (_ : xs) n = (2 ^ n) + go xs (n - 1)
+   in go s (length s - 1)

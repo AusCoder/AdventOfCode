@@ -1,4 +1,6 @@
 module Main where
 
+import Day15
+
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = day15a
