@@ -19,13 +19,6 @@ maxChar = fst . maximumBy (comparing snd) . Map.toList
 minChar :: Map.Map c Int -> c
 minChar = fst . minimumBy (comparing snd) . Map.toList
 
-binToInt :: String -> Integer
-binToInt s =
-  let go [] _ = 0
-      go ('0' : xs) n = go xs (n - 1)
-      go (_ : xs) n = (2 ^ n) + go xs (n - 1)
-   in go s (length s - 1)
-
 calculatePowerConsumption :: [String] -> Integer
 calculatePowerConsumption diagnostics =
   let calc :: (Map.Map Char Int -> Char) -> [String] -> String
@@ -35,7 +28,7 @@ calculatePowerConsumption diagnostics =
          in maybe [] (\c -> c : calc chooseCharFn tails) m
       gamma = calc maxChar diagnostics
       epsilon = calc minChar diagnostics
-   in binToInt gamma * binToInt epsilon
+   in toInteger (binToInt gamma) * toInteger (binToInt epsilon)
 
 day3a =
   runDay
@@ -63,7 +56,7 @@ calculateLifeSupport diagnostics =
    in do
         ox <- go oxChooseCharFn diagnostics diagnostics
         co2 <- go co2ChooseCharFn diagnostics diagnostics
-        return $ binToInt ox * binToInt co2
+        return $ toInteger (binToInt ox) * toInteger (binToInt co2)
 
 day3b =
   runDay
