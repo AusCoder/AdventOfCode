@@ -55,6 +55,9 @@ pairs (x : xs) =
 -- pairs [] = []
 -- pairs (x : xs) = foldr ((:) . (x,)) [] xs ++ pairs xs
 
+cross 1 xs = (: []) <$> xs
+cross n xs = xs >>= \x -> (x :) <$> cross (n - 1) xs
+
 headMay :: [a] -> Maybe a
 headMay [] = Nothing
 headMay (x : _) = Just x

@@ -1,0 +1,265 @@
+inp w0
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 12
+eql x w
+eql x 0   x == 1
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y   z == 0
+mul y 0
+add y w
+add y 7
+mul y x
+add z y   z == w + 7
+
+inp w1
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 12
+eql x w
+eql x 0   x == 1
+mul y 0
+add y 25
+mul y x
+add y 1    y == 26
+mul z y    z == (w0 + 7) * 26
+mul y 0
+add y w
+add y 8
+mul y x   y = w1 + 8
+add z y   z == (w0 + 7) * 26 + (w1 + 8)
+
+inp w2
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 13
+eql x w
+eql x 0   x == 1
+mul y 0
+add y 25
+mul y x
+add y 1    y == 26
+mul z y    z == ((w0 + 7) * 26 + (w1 + 8)) * 26
+mul y 0
+add y w
+add y 2
+mul y x
+add z y   z == ((w0 + 7) * 26 + (w1 + 8)) * 26 + (w2 + 2)
+
+inp w3
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 12
+eql x w
+eql x 0    x == 1
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y    z == z' * 26  -  z == (((w0 + 7) * 26 + (w1 + 8)) * 26 + (w2 + 2)) * 26
+mul y 0
+add y w
+add y 11
+mul y x
+add z y    z == z' * 26 + (w3 + 11)   -  z == (((w0 + 7) * 26 + (w1 + 8)) * 26 + (w2 + 2)) * 26 + (w3 + 11)
+
+inp w4
+mul x 0
+add x z
+mod x 26    x == w3 + 11
+div z 26    z == ((w0 + 7) * 26 + (w1 + 8)) * 26 + (w2 + 2)
+add x -3    x == w3 + 8
+eql x w     (w3, w4): [(1, 9)]   if w3 = 0 w4 = 8 or w3 = 1 w4 = 9     # now we can get a 1 here
+eql x 0     x == 0
+mul y 0
+add y 25
+mul y x
+add y 1     y == 1
+mul z y     z == ((w0 + 7) * 26 + (w1 + 8)) * 26 + (w2 + 2)
+mul y 0
+add y w
+add y 6
+mul y x
+add z y     z == ((w0 + 7) * 26 + (w1 + 8)) * 26 + (w2 + 2)   # this undid the previous steps!
+
+inp w5
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 10
+eql x w
+eql x 0    x == 1
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 12
+mul y x
+add z y   z == z' * 26 + (w5 + 12)
+
+inp w6
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 14
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 14
+mul y x
+add z y  z == z' * 26 + (w6 + 14)
+
+inp w7
+mul x 0
+add x z
+mod x 26
+div z 26     z == z''
+add x -16    x == w6 - 2
+eql x w      (w6, w7): [(3, 1), (4, 2), .. (9, 7)]
+eql x 0      x == 0
+mul y 0
+add y 25
+mul y x
+add y 1      y = 1
+mul z y
+mul y 0
+add y w
+add y 13
+mul y x
+add z y     z = z''
+
+inp w8
+mul x 0
+add x z
+mod x 26
+div z 1
+add x 12
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 15
+mul y x
+add z y  z == z' * 26 + (w8 + 15)
+
+inp w9
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -8    x = w8 + 7
+eql x w     (w8, w9): [(1, 8), (2, 9)]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 10
+mul y x
+add z y     z == z''
+
+inp w10
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -12   x = w5
+eql x w     (w5, w10): [(1,1), ... (9,9)]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 6
+mul y x
+add z y   z == z''
+
+inp w11
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -7    x = w2 - 5
+eql x w     (w2, w11): [(9, 4), (6, 1)]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 10
+mul y x
+add z y
+
+inp w12
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -6    x = w1 + 2
+eql x w     (w1, w12): [(7, 9), (1, 3)]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 8
+mul y x
+add z y
+
+inp w13
+mul x 0
+add x z
+mod x 26
+div z 26
+add x -11    x = w0 - 4
+eql x w      (w0, w13): [(9, 5), (5, 1)]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 5
+mul y x
+add z y
